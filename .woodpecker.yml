@@ -1,0 +1,24 @@
+pipeline:
+  check:
+    image: python
+    commands:
+      - curl -sSL https://install.python-poetry.org | python3 -
+      - /root/.local/bin/poetry install
+      - /root/.local/bin/poetry run alembic upgrade head
+      - /root/.local/bin/poetry run make test
+    environment:
+      DB_URL: "cockroachdb+asyncpg://root@database:26257/defaultdb"
+      IPFS_URL: "/ip4/cluster/tcp/9094"
+
+services:
+  database:
+    image: cockroachdb/cockroach:v22.1.7
+    commands:
+      - /cockroach/cockroach start-single-node --insecure
+  ipfs:
+    image: ipfs/kubo
+  cluster:
+    image: ipfs/ipfs-cluster
+    environment:
+      CLUSTER_IPFSHTTP_NODEMULTIADDRESS: /dns4/ipfs/tcp/5001
+      CLUSTER_RESTAPI_HTTPLISTENMULTIADDRESS: /ip4/0.0.0.0/tcp/9094
