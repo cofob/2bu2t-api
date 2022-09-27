@@ -1,5 +1,7 @@
 """Module with IPFSClient."""
 
+from typing import Tuple
+
 import aiohttp
 
 from ..exceptions import IPFSException
@@ -8,11 +10,11 @@ from ..exceptions import IPFSException
 class IPFSClient:
     """IPFS async HTTP API."""
 
-    def __init__(self, endpoint: str, auth: list[str] | None = None) -> None:
+    def __init__(self, endpoint: str, auth: Tuple[str, str] | None = None) -> None:
         """Init IPFSClient.
 
         Examples:
-            >>> client = IPFSClient("http://127.0.0.1:9094", ["user", "p@ssword"])
+            >>> client = IPFSClient("http://127.0.0.1:9094", ("user", "p@ssword"))
 
         Args:
             endpoint: REST API url.
@@ -33,6 +35,7 @@ class IPFSClient:
     async def __aexit__(self, *exc) -> None:  # type: ignore
         """With exit point."""
         await self.session.__aexit__(*exc)
+        del self.session
 
     def _get_path(self, path: str) -> str:
         """Get endpoint path.
