@@ -11,7 +11,7 @@ from .app import app
 from .routers import example
 
 # Check for required environment variables
-required_env = ["DB_URL"]
+required_env = ["DB_URL", "IPFS_URL"]
 for env in required_env:
     if environ.get(env) is None:
         print(f"{env} is not present in environment variables. Exiting...")

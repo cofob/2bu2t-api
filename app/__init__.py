@@ -1,1 +1,5 @@
-from .app import app  # noqa
+"""Firesquare API."""
+
+from .app import app
+
+__all__ = ["app"]

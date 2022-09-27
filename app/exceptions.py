@@ -34,6 +34,10 @@ class AbstractException(Exception, metaclass=ABCMeta):
         self.status_code = status_code
 
 
+class IPFSException(AbstractException):
+    """Exception related to IPFS."""
+
+
 @app.exception_handler(AbstractException)
 async def global_exception_handler(request: Request, exc: AbstractException) -> JSONResponse:
     """Exception handler for AbstractException.

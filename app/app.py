@@ -7,4 +7,6 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
+__all__ = ["app"]
+
 from . import main  # noqa

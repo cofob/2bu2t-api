@@ -8,7 +8,7 @@ pipeline:
       - /root/.local/bin/poetry run make test
     environment:
       DB_URL: "cockroachdb+asyncpg://root@database:26257/defaultdb"
-      IPFS_URL: "/ip4/cluster/tcp/9094"
+      IPFS_URL: "http://cluster:9094"
 
 services:
   database:
