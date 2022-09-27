@@ -13,7 +13,7 @@
 | IPFS_URL      | IPFS cluster RESTAPI endpoint       | true                                 | --         | `http://127.0.0.1:9094`                                |
 | IPFS_USERNAME | Basic auth username                 | false                                | none       | `admin`                                                |
 | IPFS_PASSWORD | Basic auth password                 | true, if `IPFS_USERNAME` is not none | none       | `p@ssword`                                             |
-| LOG_FILE      | Log file path                       | false                                | `logs.txt` | `/absolute/path/log.txt`                               |
+| LOG_FILE      | Log file path                       | false                                | none       | `logs.txt`                               |
 | ORIGIN        | Allowed http origin                 | false                                | `*`        | `firesquare.ru`                                        |
 
 ## Запуск
