@@ -66,7 +66,7 @@ class IPFSClient:
         """
         return self.endpoint + path
 
-    async def _add_formdata(self, data: aiohttp.FormData) -> str:
+    async def _add_formdata(self, data: aiohttp.FormData, name: str | None = None) -> str:
         """Post formdata to `/add` cluster endpoint.
 
         Examples:
@@ -76,17 +76,21 @@ class IPFSClient:
 
         Args:
             data: aiohttp.FormData object.
+            name: Pin name.
 
         Returns:
             str: File CID.
         """
-        async with self.session.post(self._get_path("/add?quieter=true"), data=data, **self.req) as response:
+        params = {"quieter": "true"}
+        if name is not None:
+            params["name"] = name
+        async with self.session.post(self._get_path("/add"), params=params, data=data, **self.req) as response:
             if response.status != 200:
                 raise IPFSException(detail="Cannot pin file")
             cid: str = (await response.json())["cid"]
         return cid
 
-    async def add_file(self, file: str, content_type: str, filename: str | None = None) -> str:
+    async def add_file(self, file: str, content_type: str, filename: str | None = None, name: str | None = None) -> str:
         """Add file to IPFS cluster.
 
         Examples:
@@ -97,33 +101,36 @@ class IPFSClient:
             file: Path to file that will be added.
             content_type: File content-type.
             filename: Filename.
+            name: Pin name.
 
         Returns:
             str: File CID.
         """
         formdata = aiohttp.FormData()
         formdata.add_field("file", open(file, "rb"), content_type=content_type, filename=filename)
-        return await self._add_formdata(formdata)
+        return await self._add_formdata(formdata, name=name)
 
-    async def add_bytes(self, data: bytes, content_type: str, filename: str | None = None) -> str:
+    async def add_bytes(
+        self, data: bytes, content_type: str, filename: str | None = None, name: str | None = None
+    ) -> str:
         """Add bytes to IPFS cluster.
 
         Examples:
             >>> await client.add_bytes(b"Hello from cofob!", "text/plain")
             QmdkTR6yFkXLh96DtAgBqW2bDGsxYKDTKZSLGgHkP8niyU
 
-
         Args:
             data: Bytes that will be added.
             content_type: File content-type.
             filename: Filename.
+            name: Pin name.
 
         Returns:
             str: File CID.
         """
         formdata = aiohttp.FormData()
         formdata.add_field("file", data, content_type=content_type, filename=filename)
-        return await self._add_formdata(formdata)
+        return await self._add_formdata(formdata, name=name)
 
     async def remove(self, cid: str) -> None:
         """Remove CID from cluster.
