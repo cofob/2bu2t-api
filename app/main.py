@@ -41,4 +41,8 @@ async def hello_world() -> str:
 
 app.include_router(example.router)
 
-logger.info("Running.")
+
+@app.on_event("startup")
+def on_start() -> None:
+    """Started FastAPI event."""
+    logger.info("Started")
