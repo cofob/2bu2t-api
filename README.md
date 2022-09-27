@@ -9,7 +9,7 @@
 
 | Name          | Description                         | Required                             | Default    | Example                                                |
 |---------------|-------------------------------------|--------------------------------------|------------|--------------------------------------------------------|
-| DB_URL        | CockroachDB database connection URL | true                                 | --         | `cockroachdb+asyncpg://root@localhost:26257/defaultdb` |
+| DB_URL        | CockroachDB database connection URL | true                                 | --         | `cockroachdb://root:pass@localhost:26257/defaultdb`   |
 | IPFS_URL      | IPFS cluster RESTAPI endpoint       | true                                 | --         | `http://127.0.0.1:9094`                                |
 | IPFS_USERNAME | Basic auth username                 | false                                | none       | `admin`                                                |
 | IPFS_PASSWORD | Basic auth password                 | true, if `IPFS_USERNAME` is not none | none       | `p@ssword`                                             |

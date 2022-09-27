@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export DB_URL="cockroachdb+asyncpg://root@localhost:26257/defaultdb"
+export DB_URL="cockroachdb://root@localhost:26257/defaultdb"
 export IPFS_URL="http://127.0.0.1:9094"
 
 docker rm -f roach || true

@@ -1,23 +1,21 @@
 """Here are the dependencies that are called via FastAPI Depend."""
 
 from os import environ
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Generator
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session
 
 from .database import engine
 from .ipfs import IPFSClient
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+def get_session() -> Generator[Session, None, None]:
     """A generator that returns a database session.
 
     Returns:
-        AsyncSession: Database session.
+        Session: Database session.
     """
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with async_session() as session:
+    with Session(engine) as session:
         yield session
 
 

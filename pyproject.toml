@@ -16,8 +16,7 @@ uvicorn = { extras = ["standard"], version = "^0.18.3" } # ASGI web-server
 SQLAlchemy = "^1.4.41" # Database-framework
 sqlmodel = "^0.0.8" # Pydantic-based abstraction over sqlalchemy models
 sqlalchemy-cockroachdb = "^1.4.4" # CockroachDB support
-asyncpg = "^0.26.0" # Async PostgreSQL driver
-psycopg2-binary = "^2.9.3" # Sync PostgreSQL driver for alembic
+psycopg2-binary = "^2.9.3" # PostgreSQL driver
 alembic = "^1.8.1" # Database migrations
 
 # IPFS
