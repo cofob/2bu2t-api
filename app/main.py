@@ -6,15 +6,19 @@ Middlewares, routers must be connected here.
 from os import environ
 
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 
 from .app import app
 from .routers import example
+
+# Setup logger
+logger.add(environ.get("LOG_FILE", "logs.txt"), rotation="100 MB", retention="2 days", backtrace=True, diagnose=True)
 
 # Check for required environment variables
 required_env = ["DB_URL", "IPFS_URL"]
 for env in required_env:
     if environ.get(env) is None:
-        print(f"{env} is not present in environment variables. Exiting...")
+        logger.error(f"{env} is not present in environment variables. Exiting...")
         exit(1)
 
 
@@ -36,3 +40,5 @@ async def hello_world() -> str:
 
 
 app.include_router(example.router)
+
+logger.info("Running.")

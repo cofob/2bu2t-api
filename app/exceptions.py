@@ -4,6 +4,7 @@ from abc import ABCMeta
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
+from loguru import logger
 from pydantic import BaseModel
 
 from .app import app
@@ -32,6 +33,8 @@ class AbstractException(Exception, metaclass=ABCMeta):
         """Init method."""
         self.detail = detail
         self.status_code = status_code
+
+        logger.error(self.detail)
 
 
 class IPFSException(AbstractException):

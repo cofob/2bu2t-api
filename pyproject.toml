@@ -23,6 +23,9 @@ alembic = "^1.8.1" # Database migrations
 # IPFS
 aiohttp = "^3.8.3"
 
+# Logging
+loguru = "^0.6.0"
+
 [tool.poetry.dev-dependencies]
 black = "^22.8.0" # Code formatter
 mypy = "^0.971" # Static type checking
