@@ -4,14 +4,14 @@ from typing import Tuple
 
 import aiohttp
 
-from ..exceptions import IPFSException
+from ..exceptions import InvalidCIDException, IPFSException
 
 
 class IPFSClient:
     """IPFS async HTTP API."""
 
     def __init__(self, endpoint: str, auth: Tuple[str, str] | None = None) -> None:
-        """Init IPFSClient.
+        """IPFS async HTTP API.
 
         Examples:
             >>> client = IPFSClient("http://127.0.0.1:9094", ("user", "p@ssword"))
@@ -36,6 +36,20 @@ class IPFSClient:
         """With exit point."""
         await self.session.__aexit__(*exc)
         del self.session
+
+    @staticmethod
+    def check_cid(cid: str) -> None:
+        """Check if CID valid.
+
+        Raises:
+            InvalidCIDException: When CID invalid.
+        """
+        if len(cid) not in [46, 59]:
+            raise InvalidCIDException()
+        if not cid.isascii():
+            raise InvalidCIDException()
+        if cid.find(" ") != -1:
+            raise InvalidCIDException()
 
     def _get_path(self, path: str) -> str:
         """Get endpoint path.
@@ -68,7 +82,7 @@ class IPFSClient:
         """
         async with self.session.post(self._get_path("/add?quieter=true"), data=data, **self.req) as response:
             if response.status != 200:
-                raise IPFSException()
+                raise IPFSException(detail="Cannot pin file")
             cid: str = (await response.json())["cid"]
         return cid
 
@@ -76,7 +90,7 @@ class IPFSClient:
         """Add file to IPFS cluster.
 
         Examples:
-            >>> client.add_file("README.md", "text/plain")
+            >>> await client.add_file("README.md", "text/plain")
             QmedsYWGvd5DWqwn6Ev5ow5pSgdqDtzsvcDGWQMa1gokEb
 
         Args:
@@ -95,7 +109,7 @@ class IPFSClient:
         """Add bytes to IPFS cluster.
 
         Examples:
-            >>> client.add_bytes(b"Hello from cofob!", "text/plain")
+            >>> await client.add_bytes(b"Hello from cofob!", "text/plain")
             QmdkTR6yFkXLh96DtAgBqW2bDGsxYKDTKZSLGgHkP8niyU
 
 
@@ -110,3 +124,17 @@ class IPFSClient:
         formdata = aiohttp.FormData()
         formdata.add_field("file", data, content_type=content_type, filename=filename)
         return await self._add_formdata(formdata)
+
+    async def remove(self, cid: str) -> None:
+        """Remove CID from cluster.
+
+        Examples:
+            >>> await client.remove("QmRf22bZar3WKmojipms22PkXH1MZGmvsqzQtuSvQE3uhm")
+
+        Args:
+            cid: CID to remove.
+        """
+        self.check_cid(cid)
+        async with self.session.delete(self._get_path(f"/pins/ipfs/{cid}"), **self.req) as response:
+            if response.status not in [200, 404]:
+                raise IPFSException(detail=f"Cannot remove CID {cid}")

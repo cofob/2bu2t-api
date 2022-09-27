@@ -38,6 +38,14 @@ class IPFSException(AbstractException):
     """Exception related to IPFS."""
 
 
+class InvalidCIDException(IPFSException):
+    """Invalid CID."""
+
+    def __init__(self) -> None:
+        """Init method."""
+        super().__init__(detail="Invalid CID")
+
+
 @app.exception_handler(AbstractException)
 async def global_exception_handler(request: Request, exc: AbstractException) -> JSONResponse:
     """Exception handler for AbstractException.

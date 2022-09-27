@@ -19,3 +19,10 @@ async def test_add_file() -> None:
     async with client as session:
         cid = await session.add_file("dummy.txt", "text/plain")
         assert cid == "QmRJaHfsTiD5JfhGju8EUKATgKYPn4jgexTipVLCTKEg6j"
+
+
+@pytest.mark.asyncio
+async def test_remove_cid() -> None:
+    async with client as session:
+        await session.remove("QmRJaHfsTiD5JfhGju8EUKATgKYPn4jgexTipVLCTKEg6j")
+        await session.remove("bafybeidlkbnqjddmsowjmbvrfrt7b54qqjxwrlmtvmdfpah5qqo72rvxvm")
