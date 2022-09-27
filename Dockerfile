@@ -12,7 +12,9 @@ RUN /root/.local/bin/poetry install --only main
 
 COPY . .
 
-EXPOSE 8000
+ENV PORT=8000
+
+EXPOSE $PORT
 
 CMD /root/.local/bin/poetry run alembic upgrade head && \
-		/root/.local/bin/poetry run uvicorn app:app --port 8000 --host 0.0.0.0
+		/root/.local/bin/poetry run uvicorn app:app --port $PORT --host 0.0.0.0
