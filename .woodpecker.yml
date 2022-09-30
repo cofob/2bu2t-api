@@ -6,9 +6,18 @@ pipeline:
       - /root/.local/bin/poetry install
       - /root/.local/bin/poetry run alembic upgrade head
       - /root/.local/bin/poetry run make test
+      - /root/.local/bin/poetry run pdoc --html --output-dir build app
     environment:
-      DB_URL: "cockroachdb+asyncpg://root@database:26257/defaultdb"
+      DB_URL: "cockroachdb://root@database:26257/defaultdb"
       IPFS_URL: "http://cluster:9094"
+      SECRET: "1234"
+  pin-cluster:
+    image: cofob/ipfs-cluster-ctl
+    commands:
+      - ipfs-cluster-ctl --host /dns4/rat.frsqr.xyz/tcp/9094 --basic-auth default:$CLUSTER_SECRET add -r --expire-in 2160h --name api/docs/$(date +%s) -Q build/app/ > cid.txt
+      - cat cid.txt
+      - echo "https://ipfsqr.ru/ipfs/$(cat cid.txt)"
+    secrets: [CLUSTER_SECRET]
 
 services:
   database:

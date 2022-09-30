@@ -10,5 +10,5 @@ engine = create_engine(environ["DB_URL"])
 
 
 def get_engine_session() -> Session:
-    """Get sqlmodel.Session instance with current engine."""
+    """Get `sqlmodel.Session` instance with current engine."""
     return Session(engine)
