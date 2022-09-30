@@ -15,6 +15,9 @@ class IPFSClient:
 
         Examples:
             >>> client = IPFSClient("http://127.0.0.1:9094", ("user", "p@ssword"))
+            >>> async with client as session:
+            >>>     await client.add_bytes(b"Hello from cofob!", "text/plain")
+            "QmdkTR6yFkXLh96DtAgBqW2bDGsxYKDTKZSLGgHkP8niyU"
 
         Args:
             endpoint: REST API url.
@@ -73,6 +76,7 @@ class IPFSClient:
             >>> data = aiohttp.FormData()
             >>> data.add_field("file", open("example.txt", "rb"))
             >>> cid = await self._add_formdata(data)
+            "QmedsYWGvd5DWqwn6Ev5ow5pSgdqDtzsvcDGWQMa1gokEb"
 
         Args:
             data: aiohttp.FormData object.
@@ -84,18 +88,22 @@ class IPFSClient:
         params = {"quieter": "true"}
         if name is not None:
             params["name"] = name
-        async with self.session.post(self._get_path("/add"), params=params, data=data, **self.req) as response:
+        async with self.session.post(
+            self._get_path("/add"), params=params, data=data, **self.req
+        ) as response:
             if response.status != 200:
                 raise IPFSException(detail="Cannot pin file")
             cid: str = (await response.json())["cid"]
         return cid
 
-    async def add_file(self, file: str, content_type: str, filename: str | None = None, name: str | None = None) -> str:
+    async def add_file(
+        self, file: str, content_type: str, filename: str | None = None, name: str | None = None
+    ) -> str:
         """Add file to IPFS cluster.
 
         Examples:
             >>> await client.add_file("README.md", "text/plain")
-            QmedsYWGvd5DWqwn6Ev5ow5pSgdqDtzsvcDGWQMa1gokEb
+            "QmedsYWGvd5DWqwn6Ev5ow5pSgdqDtzsvcDGWQMa1gokEb"
 
         Args:
             file: Path to file that will be added.
@@ -117,7 +125,7 @@ class IPFSClient:
 
         Examples:
             >>> await client.add_bytes(b"Hello from cofob!", "text/plain")
-            QmdkTR6yFkXLh96DtAgBqW2bDGsxYKDTKZSLGgHkP8niyU
+            "QmdkTR6yFkXLh96DtAgBqW2bDGsxYKDTKZSLGgHkP8niyU"
 
         Args:
             data: Bytes that will be added.

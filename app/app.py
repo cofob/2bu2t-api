@@ -1,4 +1,4 @@
-"""File containing FastAPI app instance.
+"""Module containing FastAPI app instance.
 
 A separate file is needed to avoid creating circular imports.
 """

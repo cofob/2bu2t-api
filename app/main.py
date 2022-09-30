@@ -14,11 +14,15 @@ from .routers import example
 # Setup logger
 if environ.get("LOG_FILE") is not None:
     logger.add(
-        environ.get("LOG_FILE", "logs.txt"), rotation="100 MB", retention="2 days", backtrace=True, diagnose=True
+        environ.get("LOG_FILE", "logs.txt"),
+        rotation="100 MB",
+        retention="2 days",
+        backtrace=True,
+        diagnose=True,
     )
 
 # Check for required environment variables
-required_env = ["DB_URL", "IPFS_URL"]
+required_env = ["DB_URL", "IPFS_URL", "SECRET"]
 for env in required_env:
     if environ.get(env) is None:
         logger.error(f"{env} is not present in environment variables. Exiting...")

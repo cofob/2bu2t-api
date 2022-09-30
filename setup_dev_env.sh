@@ -2,6 +2,7 @@
 
 export DB_URL="cockroachdb://root@localhost:26257/defaultdb"
 export IPFS_URL="http://127.0.0.1:9094"
+export SECRET="1234"
 
 docker rm -f roach || true
 docker run -d --rm \

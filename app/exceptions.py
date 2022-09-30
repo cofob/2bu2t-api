@@ -1,4 +1,4 @@
-"""File containing exceptions inherited from AbstractException."""
+"""Module containing exceptions inherited from AbstractException."""
 
 from abc import ABCMeta
 
@@ -18,6 +18,7 @@ class ErrorModel(BaseModel):
     ok: bool = False
     status_code: int = 500
     error_code: str = "Exception"
+    error_code_description: str | None = None
     detail: str | None = None
 
 
@@ -29,11 +30,12 @@ class AbstractException(Exception, metaclass=ABCMeta):
 
     def __init__(
         self,
-        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail: str | None = None,
+        status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         headers: dict[str, str] | None = None,
     ) -> None:
         """Init method."""
+        super().__init__(detail)
         self.detail = detail
         self.status_code = status_code
         self.headers = headers
@@ -53,6 +55,14 @@ class InvalidCIDException(IPFSException):
         super().__init__(detail="Invalid CID")
 
 
+class JWTException(AbstractException):
+    """Exception related to JWT."""
+
+
+class JWTValidationError(AbstractException):
+    """JWT validation error."""
+
+
 @app.exception_handler(AbstractException)
 async def abstract_exception_handler(request: Request, exc: AbstractException) -> JSONResponse:
     """Exception handler for AbstractException.
@@ -66,6 +76,7 @@ async def abstract_exception_handler(request: Request, exc: AbstractException) -
             error_code=exc.__class__.__name__,
             detail=exc.detail,
             status_code=exc.status_code,
+            error_code_description=exc.__class__.__doc__,
         ).dict(),
         headers=exc.headers,
     )
@@ -90,7 +101,9 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """Exception handler for RequestValidationError.
 
     Returns:

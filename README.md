@@ -9,11 +9,12 @@
 
 | Name          | Description                         | Required                             | Default    | Example                                                |
 |---------------|-------------------------------------|--------------------------------------|------------|--------------------------------------------------------|
-| DB_URL        | CockroachDB database connection URL | true                                 | --         | `cockroachdb://root:pass@localhost:26257/defaultdb`   |
+| DB_URL        | CockroachDB database connection URL | true                                 | --         | `cockroachdb://root:pass@localhost:26257/defaultdb`    |
+| SECRET        | Secret used for JWT and mail OTP    | true                                 | --         | `openssl rand -hex 64`                                 |
 | IPFS_URL      | IPFS cluster RESTAPI endpoint       | true                                 | --         | `http://127.0.0.1:9094`                                |
 | IPFS_USERNAME | Basic auth username                 | false                                | none       | `admin`                                                |
 | IPFS_PASSWORD | Basic auth password                 | true, if `IPFS_USERNAME` is not none | none       | `p@ssword`                                             |
-| LOG_FILE      | Log file path                       | false                                | none       | `logs.txt`                               |
+| LOG_FILE      | Log file path                       | false                                | none       | `logs.txt`                                             |
 | ORIGIN        | Allowed http origin                 | false                                | `*`        | `firesquare.ru`                                        |
 
 ## Запуск

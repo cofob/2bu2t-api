@@ -5,7 +5,7 @@ from typing import AsyncGenerator, Generator
 
 from sqlmodel import Session
 
-from .database import engine
+from .database import get_engine_session
 from .ipfs import IPFSClient
 
 
@@ -15,7 +15,7 @@ def get_session() -> Generator[Session, None, None]:
     Returns:
         Session: Database session.
     """
-    with Session(engine) as session:
+    with get_engine_session() as session:
         yield session
 
 
