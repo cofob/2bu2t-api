@@ -36,6 +36,35 @@ def generate_access_token_expire_ts() -> int:
     return int((datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_MINUTES)).timestamp())
 
 
+def encode(data: ParsedJWTType) -> str:
+    """Encode provided data to signed JWT token.
+
+    Args:
+        data: JWT data.
+
+    Returns:
+        str: JWT string.
+    """
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)  # type: ignore
+
+
+def decode(token: str, options: dict[str, bool]) -> ParsedJWTType:
+    """Decode JWT token and return its data.
+
+    Args:
+        token: JWT token string.
+
+    Returns:
+        dict: Parsed JWT data.
+    """
+    return jwt.decode(  # type: ignore
+        token,
+        SECRET_KEY,
+        algorithms=ALGORITHM,
+        options=options,
+    )
+
+
 class TokenTypes(Enum):
     """Token types."""
 
@@ -168,7 +197,7 @@ class TokenBase(TokenABC):
                 "class": self.__class__.__name__,
             }
         )
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # type: ignore
+        return encode(to_encode)
 
     def issue_access_token(self, data: ParsedJWTType = {}) -> str:
         to_encode = data.copy()
@@ -181,7 +210,7 @@ class TokenBase(TokenABC):
                 "class": self.__class__.__name__,
             }
         )
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # type: ignore
+        return encode(to_encode)
 
     @classmethod
     def cleanup(cls) -> None:
@@ -191,11 +220,9 @@ class TokenBase(TokenABC):
     @staticmethod
     def parse(token: str) -> ParsedJWTType:
         try:
-            return jwt.decode(  # type: ignore
+            return decode(
                 token,
-                SECRET_KEY,
-                algorithms=ALGORITHM,
-                options={"require_iat": True, "require_exp": True, "require_sub": True},
+                {"require_iat": True, "require_exp": True, "require_sub": True},
             )
         except JWTError:
             logger.exception("JWT exception")
