@@ -13,6 +13,7 @@ from loguru import logger
 from sqlmodel import Field, Session, SQLModel
 
 from app.exceptions import JWTRevokedException, JWTValidationError
+from app.models.user import User
 
 from ..database import get_engine_session
 
@@ -236,6 +237,11 @@ class UserToken(TokenBase, table=True):
         if typ == TokenTypes.RefreshToken:
             if db.query(cls).filter(cls.user == parsed["sub"]).first() is None:
                 raise JWTRevokedException()
+            user = db.query(User).filter(User.uuid == parsed["sub"]).first()
+            if user is None:
+                raise JWTRevokedException()
+            if user.disabled:
+                raise JWTRevokedException("Disabled user.")
 
     @classmethod
     def from_str(cls: Type[T], token: str, typ: TokenTypes, db: Session) -> T:
