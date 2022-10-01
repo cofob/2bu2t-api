@@ -5,7 +5,6 @@ from calendar import timegm
 from datetime import datetime, timedelta
 from enum import Enum
 from os import environ
-from time import time
 from typing import Type, TypeVar
 from uuid import UUID, uuid4
 
@@ -231,7 +230,10 @@ class TokenBase(TokenABC):
     @classmethod
     def cleanup(cls) -> None:
         with get_engine_session() as db:
-            db.query(cls).filter(cls.expire_in <= int(time())).delete()
+            q = db.query(cls).filter(cls.expire_in <= generate_iat_ts())
+            count = q.count()
+            q.delete()
+            logger.info(f"Deleted {count} expired UserTokens.")
 
     @staticmethod
     def parse(token: str) -> ParsedJWTType:

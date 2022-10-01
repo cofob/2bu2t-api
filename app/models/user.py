@@ -3,7 +3,10 @@
 from time import time
 from uuid import UUID, uuid4
 
+from loguru import logger
 from sqlmodel import Field, SQLModel
+
+from app.database import get_engine_session
 
 
 class UserBase(SQLModel):
@@ -36,6 +39,14 @@ class User(UserBase, table=True):
     disabled: bool = Field(default=False, nullable=False)
     verifed: bool = Field(default=False, nullable=False)
     created_at: int = Field(default_factory=time, nullable=False)
+
+    @classmethod
+    def cleanup(cls) -> None:
+        with get_engine_session() as db:
+            q = db.query(cls).filter(cls.created_at + 3600 <= int(time()), cls.verifed == False)
+            count = q.count()
+            q.delete()
+            logger.info(f"Deleted {count} unverifed User accounts.")
 
 
 class UserCreate(UserBase):
