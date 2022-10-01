@@ -1,8 +1,8 @@
 """Initial revision
 
-Revision ID: b04c9b5c7e7d
+Revision ID: 92a27b009b33
 Revises: 
-Create Date: 2022-10-01 06:47:15.282532
+Create Date: 2022-10-01 22:09:42.019376
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = "b04c9b5c7e7d"
+revision = "92a27b009b33"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,8 +27,8 @@ def upgrade() -> None:
         sa.Column("uuid", sqlmodel.sql.sqltypes.GUID(), nullable=False),
         sa.PrimaryKeyConstraint("email", "nickname", "uuid"),
     )
-    op.create_index(op.f("ix_user_email"), "user", ["email"], unique=False)
-    op.create_index(op.f("ix_user_nickname"), "user", ["nickname"], unique=False)
+    op.create_index(op.f("ix_user_email"), "user", ["email"], unique=True)
+    op.create_index(op.f("ix_user_nickname"), "user", ["nickname"], unique=True)
     op.create_index(op.f("ix_user_uuid"), "user", ["uuid"], unique=True)
     op.create_table(
         "usertoken",

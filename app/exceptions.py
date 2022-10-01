@@ -3,7 +3,6 @@
 from abc import ABCMeta
 
 from fastapi import Request, status
-from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel
@@ -35,7 +34,8 @@ class AbstractException(Exception, metaclass=ABCMeta):
         headers: dict[str, str] | None = None,
     ) -> None:
         """Init method."""
-        super().__init__(detail)
+        if detail is not None:
+            super().__init__(detail)
         self.detail = detail
         self.status_code = status_code
         self.headers = headers
@@ -50,17 +50,34 @@ class IPFSException(AbstractException):
 class InvalidCIDException(IPFSException):
     """Invalid CID."""
 
-    def __init__(self) -> None:
-        """Init method."""
-        super().__init__(detail="Invalid CID")
-
 
 class JWTException(AbstractException):
     """Exception related to JWT."""
 
 
-class JWTValidationError(AbstractException):
-    """JWT validation error."""
+class JWTValidationError(JWTException):
+    """JWT validation error.
+
+    This can happen in several cases:
+    - If JWT cannot be parsed
+    - If the `exp` field is expired or not present
+    - If the `iat` field is invalid or not present
+    - If the `sub` field is invalid or not present
+    - If the `typ` field is invalid or not present
+    - If the `jti` or `sid` field is invalid or not present
+    - If the `class` field is not present
+    """
+
+
+class JWTRevokedException(JWTValidationError):
+    """JWT is revoked and cannot be accepted.
+
+    This can happen in several cases:
+    - If the `sub` field is not found in the database
+      (i.e. the one for whom this token was issued is not found)
+    - If the `jti` field is not found in the database
+      (the token was cancelled prematurely if the `exp` field has not come out yet)
+    """
 
 
 @app.exception_handler(AbstractException)
@@ -74,7 +91,7 @@ async def abstract_exception_handler(request: Request, exc: AbstractException) -
         status_code=exc.status_code,
         content=ErrorModel(
             error_code=exc.__class__.__name__,
-            detail=exc.detail,
+            detail=exc.detail if exc.detail is not None else exc.__class__.__doc__,
             status_code=exc.status_code,
             error_code_description=exc.__class__.__doc__,
         ).dict(),
@@ -97,23 +114,4 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
             status_code=exc.status_code,
         ).dict(),
         headers=exc.headers,
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(
-    request: Request, exc: RequestValidationError
-) -> JSONResponse:
-    """Exception handler for RequestValidationError.
-
-    Returns:
-        JSON serialized ErrorModel.
-    """
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=ErrorModel(
-            error_code="RequestValidationException",
-            detail="Invalid request",
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        ).dict(),
     )

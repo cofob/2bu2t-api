@@ -8,8 +8,8 @@ from sqlmodel import Field, SQLModel
 class UserBase(SQLModel):
     """Base user model."""
 
-    email: str = Field(primary_key=True, index=True, nullable=False)
-    nickname: str = Field(primary_key=True, index=True, nullable=False)
+    email: str = Field(primary_key=True, index=True, nullable=False, unique=True)
+    nickname: str = Field(primary_key=True, index=True, nullable=False, unique=True)
     disabled: bool = Field(default=False, nullable=False)
 
 

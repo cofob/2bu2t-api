@@ -5,13 +5,14 @@ from datetime import datetime, timedelta
 from enum import Enum
 from os import environ
 from time import time
+from typing import Type, TypeVar
 from uuid import UUID, uuid4
 
 from jose import JWTError, jwt
 from loguru import logger
 from sqlmodel import Field, Session, SQLModel
 
-from app.exceptions import JWTException, JWTValidationError
+from app.exceptions import JWTRevokedException, JWTValidationError
 
 from ..database import get_engine_session
 
@@ -21,6 +22,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 90
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
 
 ParsedJWTType = dict[str, str | int | float]
+T = TypeVar("T", bound="TokenABC")
 
 
 def generate_refresh_token_expire_ts() -> int:
@@ -43,7 +45,7 @@ class TokenTypes(Enum):
 class TokenABC(SQLModel, metaclass=ABCMeta):
     """Abstract token model.
 
-    It is intended for refresh JWT tokens. If the UUID is in this table,
+    It is intended for refresh JWT tokens. If the `uuid` is in this table,
     then the JWT is valid and can be accepted.
     """
 
@@ -56,7 +58,7 @@ class TokenABC(SQLModel, metaclass=ABCMeta):
         Examples:
             >>> token = Token()
             >>> token.issue_refresh_token({"some_key": "some_data"})
-            >>> "eyJhbGcCJ9.eyJ1aWQiOiI3MzyIn0.w-IX1M5Tmals6HBA"
+            "eyJhbGcCJ9.eyJ1aWQiOiI3MzyIn0.w-IX1M5Tmals6HBA"
 
         Args:
             dict: JWT data.
@@ -74,7 +76,7 @@ class TokenABC(SQLModel, metaclass=ABCMeta):
         Examples:
             >>> token = Token()
             >>> token.issue_access_token({"some_key": "some_data"})
-            >>> "eyJhbGcCJ9.eyJ1aWQiOiI3MzyIn0.w-IX1M5Tmals6HBA"
+            "eyJhbGcCJ9.eyJ1aWQiOiI3MzyIn0.w-IX1M5Tmals6HBA"
 
         Args:
             dict: JWT data.
@@ -95,11 +97,11 @@ class TokenABC(SQLModel, metaclass=ABCMeta):
 
         Examples:
             >>> Token.parse("eyJhbGcCJ9.eyJ1aWQiOiI3MzyIn0.w-IX1M5Tmals6HBA")
-            >>> {
-            >>>   "sub": "1234567890",
-            >>>   "name": "John Doe",
-            >>>   "iat": 1516239022
-            >>> }
+            {
+              "sub": "1234567890",
+              "name": "John Doe",
+              "iat": 1516239022
+            }
 
         Args:
             token: JWT token string.
@@ -110,20 +112,39 @@ class TokenABC(SQLModel, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def verify(cls, parsed: ParsedJWTType, typ: TokenTypes, db: Session | None = None) -> None:
+    def verify(cls, parsed: ParsedJWTType, typ: TokenTypes, db: Session) -> None:
         """Verify that token is valid.
 
         Examples:
             >>> parsed = Token.parse("eyJhbGcCJ9.eyJ1aWQiOiI3MzyIn0.w-IX1M5Tmals6HBA")
-            >>> Token.verify(parsed, TokenType.AccessToken)
+            >>> Token.verify(parsed, TokenType.AccessToken, db)
 
         Args:
             parsed: Parsed JWT token.
-            db: Database session.
             typ: Token type.
+            db: Database session.
+
+        Returns:
+            None: If token valid and can be accepted.
 
         Raises:
             JWTValidationError: If token is invalid.
+        """
+
+    @classmethod
+    @abstractmethod
+    def from_str(cls: Type[T], token: str, typ: TokenTypes, db: Session) -> T:
+        """Parse, verify and return prepared class.
+
+        Examples:
+            >>> token = Token.from_str("eyJhbGcCJ9.eyJ1aWQiOiI3MzyIn0.w-IX1M5Tmals6HBA")
+            Token(...)
+
+        Returns:
+            TokenABC: Child of TokenABC.
+
+        Raises:
+            JWTValidationError: If token invalid.
         """
 
 
@@ -142,6 +163,7 @@ class TokenBase(TokenABC):
                 "exp": self.expire_in,
                 "iat": int(time()),
                 "typ": TokenTypes.RefreshToken.value,
+                "jti": self.uuid.hex,
                 "class": self.__class__.__name__,
             }
         )
@@ -154,6 +176,7 @@ class TokenBase(TokenABC):
                 "exp": generate_access_token_expire_ts(),
                 "iat": int(time()),
                 "typ": TokenTypes.AccessToken.value,
+                "sid": self.uuid.hex,
                 "class": self.__class__.__name__,
             }
         )
@@ -178,12 +201,18 @@ class TokenBase(TokenABC):
             raise JWTValidationError(detail="JWT decode/verification error")
 
     @classmethod
-    def verify(cls, parsed: ParsedJWTType, typ: TokenTypes, db: Session | None = None) -> None:
+    def verify(cls, parsed: ParsedJWTType, typ: TokenTypes, db: Session) -> None:
         typ_value = parsed.get("typ")
         if typ_value is None:
             raise JWTValidationError(detail="typ field is not provided")
         if typ_value != typ.value:
             raise JWTValidationError(detail=f"{typ.name} token is required")
+        if typ == TokenTypes.RefreshToken:
+            jti_value = parsed.get("jti")
+            if jti_value is None:
+                raise JWTValidationError(detail="jti field is not provided")
+            if db.query(cls).filter(cls.uuid == parsed["jti"]).first() is None:
+                raise JWTRevokedException()
 
 
 class UserToken(TokenBase, table=True):
@@ -193,18 +222,27 @@ class UserToken(TokenBase, table=True):
 
     def issue_refresh_token(self, data: ParsedJWTType = {}) -> str:
         assert self.user is not None
-        data.update({"sub": str(self.user)})
+        data.update({"sub": self.user.hex})
         return super().issue_refresh_token(data)
 
     def issue_access_token(self, data: ParsedJWTType = {}) -> str:
         assert self.user is not None
-        data.update({"sub": str(self.user)})
+        data.update({"sub": self.user.hex})
         return super().issue_access_token(data)
 
     @classmethod
-    def verify(cls, parsed: ParsedJWTType, typ: TokenTypes, db: Session | None = None) -> None:
+    def verify(cls, parsed: ParsedJWTType, typ: TokenTypes, db: Session) -> None:
         super().verify(parsed, typ, db)
         if typ == TokenTypes.RefreshToken:
-            assert db
             if db.query(cls).filter(cls.user == parsed["sub"]).first() is None:
-                raise JWTException("JWT revoked")
+                raise JWTRevokedException()
+
+    @classmethod
+    def from_str(cls: Type[T], token: str, typ: TokenTypes, db: Session) -> T:
+        parsed = cls.parse(token)
+        cls.verify(parsed, typ, db)
+        return cls(
+            uuid=parsed.get("jti") if parsed.get("jti") is not None else parsed["sid"],
+            expire_in=parsed["exp"],
+            user=parsed["sub"],
+        )
