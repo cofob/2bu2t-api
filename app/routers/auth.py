@@ -4,12 +4,12 @@ from calendar import timegm
 from datetime import datetime, timedelta
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Body, Depends, Request
+from fastapi import APIRouter, Body, Depends, Query, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from sqlmodel import Session
 
-from app.exceptions import JWTValidationError
+from app.exceptions import JWTValidationError, UserNotFoundException
 from app.models.user import User, UserCreate
 
 from ..app import limiter
@@ -116,3 +116,14 @@ async def get_access_token(
     """Get access token by refresh token."""
     usertoken = token.UserToken.from_str(refresh_token, token.TokenTypes.RefreshToken, db)
     return AccessToken(access_token=usertoken.issue_access_token())
+
+
+@router.get("/login/get_uuid", response_model=UUID)
+async def get_uuid_by_nickname(
+    db: Session = Depends(get_session), nickname: str = Query(max_length=16)
+) -> UUID:
+    """Get UUID by user nickname."""
+    user: User | None = db.query(User).where(User.nickname == nickname).first()
+    if user is None:
+        raise UserNotFoundException()
+    return user.uuid
