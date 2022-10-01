@@ -6,8 +6,8 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel
-from starlette.exceptions import HTTPException as StarletteHTTPException
 from slowapi.errors import RateLimitExceeded
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .app import app
 
@@ -85,6 +85,18 @@ class JWTRevokedException(JWTValidationError):
     - If the `jti` field is not found in the database
       (the token was cancelled prematurely if the `exp` field has not come out yet)
     """
+
+
+class AuthenticationException(AbstractException):
+    """Exception related to authentication process."""
+
+
+class UserNotFoundException(AuthenticationException):
+    """User not found."""
+
+
+class InvalidPasswordException(AuthenticationException):
+    """Invalid password."""
 
 
 @app.exception_handler(AbstractException)

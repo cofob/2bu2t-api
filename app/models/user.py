@@ -24,8 +24,7 @@ class UserBase(SQLModel):
         max_length=16,
         regex=r"^[a-zA-Z0-9_]+$",
     )
-    disabled: bool = Field(default=False, nullable=False)
-    created_at: int = Field(default_factory=time, nullable=False)
+    password: str = Field(max_length=128, nullable=False)
 
 
 class User(UserBase, table=True):
@@ -34,6 +33,9 @@ class User(UserBase, table=True):
     uuid: UUID = Field(
         default_factory=uuid4, primary_key=True, index=True, nullable=False, unique=True
     )
+    disabled: bool = Field(default=False, nullable=False)
+    verifed: bool = Field(default=False, nullable=False)
+    created_at: int = Field(default_factory=time, nullable=False)
 
 
 class UserCreate(UserBase):

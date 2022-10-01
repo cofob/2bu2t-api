@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from .app import app, limiter
-from .routers import example
+from .routers import auth
 
 # Setup logger
 if environ.get("LOG_FILE") is not None:
@@ -50,7 +50,7 @@ async def hello_world() -> str:
     return "Hello world!"
 
 
-app.include_router(example.router)
+app.include_router(auth.router)
 
 
 @app.on_event("startup")

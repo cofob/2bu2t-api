@@ -11,6 +11,7 @@ python = "^3.10"
 fastapi = "^0.85.0" # Web-framework
 slowapi = "^0.1.6" # Rate-limiting for FastAPI
 pydantic = "^1.10.2" # Serializtion-framework
+python-multipart = "^0.0.5" # Multipart handling
 uvicorn = { extras = ["standard"], version = "^0.18.3" } # ASGI web-server
 
 # Database
@@ -31,6 +32,7 @@ python-jose = "^3.3.0"
 
 # Password hashing
 passlib = "^1.7.4"
+bcrypt = "^4.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.8.0" # Code formatter

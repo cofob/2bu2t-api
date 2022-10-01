@@ -3,12 +3,13 @@ from uuid import uuid4
 
 from app.database import get_engine_session
 from app.models import TokenTypes, User, UserToken
+from tests.utils import get_user
 
 
 def test_issue_refresh_token() -> None:
     uuid = uuid4()
     token_uuid = uuid4()
-    user = User(email=uuid.hex + "@bar.com", nickname=uuid.hex[:6], uuid=uuid)
+    user = get_user(uuid)
     usertoken = UserToken(user=user.uuid, uuid=token_uuid)
     token = usertoken.issue_refresh_token()
     parsed = UserToken.parse(token)
@@ -30,7 +31,7 @@ def test_issue_refresh_token() -> None:
 def test_issue_access_token() -> None:
     uuid = uuid4()
     token_uuid = uuid4()
-    user = User(email=uuid.hex + "@bar.com", nickname=uuid.hex[:6], uuid=uuid)
+    user = get_user(uuid)
     usertoken = UserToken(user=user.uuid, uuid=token_uuid)
     token = usertoken.issue_access_token()
     parsed = UserToken.parse(token)
