@@ -33,7 +33,13 @@ class AbstractException(Exception, metaclass=ABCMeta):
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         headers: dict[str, str] | None = None,
     ) -> None:
-        """Init method."""
+        """Exception init method.
+
+        Args:
+            detail: Short error description.
+            status_code: HTTP status code that will be returned.
+            headers: Dict with HTTP headers that will be returned.
+        """
         if detail is not None:
             super().__init__(detail)
         self.detail = detail
