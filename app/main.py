@@ -8,7 +8,7 @@ from os import environ
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
-from .app import app
+from .app import app, limiter
 from .routers import example
 
 # Setup logger
@@ -38,6 +38,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Rate limit
+app.state.limiter = limiter
 
 
 @app.get("/", response_model=str)

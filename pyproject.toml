@@ -9,6 +9,7 @@ python = "^3.10"
 
 # FastAPI
 fastapi = "^0.85.0" # Web-framework
+slowapi = "^0.1.6" # Rate-limiting for FastAPI
 pydantic = "^1.10.2" # Serializtion-framework
 uvicorn = { extras = ["standard"], version = "^0.18.3" } # ASGI web-server
 

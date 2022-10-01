@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from slowapi.errors import RateLimitExceeded
 
 from .app import app
 
@@ -118,6 +119,24 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
             error_code="Exception",
             detail=exc.detail,
             status_code=exc.status_code,
+        ).dict(),
+        headers=exc.headers,
+    )
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exception_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    """Exception handler for RateLimitExceeded.
+
+    Returns:
+        JSON serialized ErrorModel.
+    """
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorModel(
+            error_code="RateLimitExceededException",
+            detail="Rate limit exceed",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
         ).dict(),
         headers=exc.headers,
     )
