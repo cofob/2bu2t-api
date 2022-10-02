@@ -273,6 +273,14 @@ class UserToken(TokenBase, table=True):
         data.update({"sub": self.user.hex})
         return super().issue_access_token(data)
 
+    def issue_access_token_user_data(self, db: Session, data: ParsedJWTType = {}) -> str:
+        """Issue access token with additional user data, such as `scope`, `email`, `nickname`."""
+        assert self.user is not None
+        user_model = db.query(User).where(User.uuid == self.user).first()
+        assert user_model is not None
+        data.update({"nickname": user_model.nickname, "email": user_model.email})
+        return self.issue_access_token(data)
+
     @classmethod
     def verify(cls, parsed: ParsedJWTType, typ: TokenTypes, db: Session) -> None:
         super().verify(parsed, typ, db)

@@ -66,7 +66,7 @@ async def signup(
     return RegistrationDone(
         uuid=new_user.uuid,
         pair=TokenPair(
-            access_token=usertoken.issue_access_token(),
+            access_token=usertoken.issue_access_token_user_data(db),
             refresh_token=usertoken.issue_refresh_token(),
         ),
     )
@@ -104,7 +104,8 @@ async def login(
     db.add(usertoken)
     db.commit()
     return TokenPair(
-        access_token=usertoken.issue_access_token(), refresh_token=usertoken.issue_refresh_token()
+        access_token=usertoken.issue_access_token_user_data(db),
+        refresh_token=usertoken.issue_refresh_token(),
     )
 
 
@@ -115,7 +116,7 @@ async def get_access_token(
 ) -> AccessToken:
     """Get access token by refresh token."""
     usertoken = token.UserToken.from_str(refresh_token, token.TokenTypes.RefreshToken, db)
-    return AccessToken(access_token=usertoken.issue_access_token())
+    return AccessToken(access_token=usertoken.issue_access_token_user_data(db))
 
 
 @router.get("/login/get_uuid", response_model=UUID)
